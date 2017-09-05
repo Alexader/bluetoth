@@ -13,5 +13,6 @@
   * 读取湿度传感器 DHT11的一个字节的湿度数据，并转化为三个字节的数组，方便传输（虽然DHT11也能收集温度数据，但是精度上大打折扣）。
   * 利用蓝牙芯片HC-05将上述的温度和湿度数据进行串口传送，发送到手机APP中。
 这是几张运行时的单片机图片，需要提醒的是，温度传感器和湿度传感器的数据引脚都需要上拉电阻，网上的教程很多，就不再赘述。
-![单片机](https://github.com/Alexader/bluetoth/blob/master/microcontroller.jpg “单片机”)
-![传感器](https://github.com/Alexader/bluetoth/blob/master/sensors.jpg “传感器”)
+![单片机](https://github.com/Alexader/bluetoth/blob/master/microcontroller.jpg "单片机")
+![传感器](https://github.com/Alexader/bluetoth/blob/master/sensors.jpg "传感器")
+附上我的相应的Android APP的GitHub仓库链接:[ControlBluetooth](https://github.com/Alexader/ControlBlueTooth)
