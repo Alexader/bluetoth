@@ -8,11 +8,12 @@ sbit DHT11_DQ_OUT=P3^6;
 //--定义温度使用的IO口--//
 sbit DSPORT=P3^7;
 
-sbit FAN = P2^1;
+sbit FAN = P2^0;
 sbit TEMP_SWITCH=P2^7;
 sbit HUMID_SWITCH=P2^6;
 
-int temp;
+int temp;//是一个四位整数，两位表示温度的整数，两位表示温度的小数
+u8 Int_temp;
 u8 humi;
 u8 temp_stand;//设置湿度的阙值
 u8 humid_stand;//设置温度的阙值
@@ -331,6 +332,10 @@ void usart_init()
     ES   = 1;                     //开串口中断                  
     EA   = 1;                     //开总中断          
     TR1  = 1;                     //启动定时器
+	temp_stand = 28;
+	humid_stand = 60;
+	TEMP_SWITCH = 0;
+	HUMID_SWITCH = 0;
 }
 
 //---------------------------
@@ -367,14 +372,18 @@ void main()
 {    
     usart_init();                  //串口中断初始化
     while(1)
-    {	DHT11_Read_Data();
-		if(temp<temp_stand)
+    {	
+		DHT11_Read_Data();
+		temp = Ds18b20ReadTemp();
+		datapros_temp(temp);
+		Int_temp = temp /100;
+		if(Int_temp<temp_stand)
 			TEMP_SWITCH = 1;//打开设备升温
 		else TEMP_SWITCH = 0;
 		
-//		if(humid<humid_stand)
-//			HUMID_SWITCH = 1;
-//		else HUMID_SWITCH = 0;
+		if(humi>humid_stand)
+			HUMID_SWITCH = 1;
+		else HUMID_SWITCH = 0;
 
 		if(Flag==1){  
             EA=0;                  //进入循环之后就把总中断关闭，防止处理过程中又有中断进来
