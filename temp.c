@@ -8,9 +8,13 @@ sbit DHT11_DQ_OUT=P3^6;
 //--定义温度使用的IO口--//
 sbit DSPORT=P3^7;
 
-sbit FAN = P2^0;
+sbit FAN = P2^1;
 sbit TEMP_SWITCH=P2^7;
 sbit HUMID_SWITCH=P2^6;
+
+u8 HUMI_FLAG;
+u8 TEMP_FLAG;
+u8 recv_state;
 
 int temp;//是一个四位整数，两位表示温度的整数，两位表示温度的小数
 u8 Int_temp;
@@ -20,7 +24,7 @@ u8 humid_stand;//设置温度的阙值
 char num=0;
 
 u8 index;
-u8 value[3];
+u8 value[2];
 u8 DisplayData[8];//显示湿度的数组
 
 u8 DisplayData_temp[8];//显示温度的数组
@@ -332,7 +336,10 @@ void usart_init()
     ES   = 1;                     //开串口中断                  
     EA   = 1;                     //开总中断          
     TR1  = 1;                     //启动定时器
-	temp_stand = 28;
+	TEMP_FLAG = 0;
+	HUMI_FLAG = 0;
+	recv_state = 0;
+	temp_stand = 31;
 	humid_stand = 60;
 	TEMP_SWITCH = 0;
 	HUMID_SWITCH = 0;
@@ -347,11 +354,7 @@ void send_data(unsigned char a)
     while(0 == TI);                //每次等待发送完毕，再执行下一条
     TI=0;                          //手动清0
 }
-//将接收到的字符数据转化为数字
-u8 str2int(char* value)
-{
-	return (value[0]-'0')+(value[1]-'0');
-}
+
 //---------------------------
 //串口中断程序
 //---------------------------
@@ -362,6 +365,10 @@ void ser_int (void) interrupt 4 using 1
         RI = 0;                    //清除RI接受中断标志
         ReData = SBUF;             //SUBF接受/发送缓冲器
         Flag=1;                    //标志位置1表示有新数据进来
+		if(ReData=='t') {recv_state = 1; return;};//当接收到要设置温度标准的信号（也就是't'这个字符）的时候，为下次到来的温度标准值做准备
+		if(ReData=='h') {recv_state = 2; return;};
+		if(recv_state==1) {temp_stand = ReData; recv_state = 0;}
+		if(recv_state==2) {humid_stand = ReData; recv_state = 0;}
     }
 } 
 
@@ -376,9 +383,10 @@ void main()
 		DHT11_Read_Data();
 		temp = Ds18b20ReadTemp();
 		datapros_temp(temp);
-		Int_temp = temp /100;
+		Int_temp = DisplayData_temp[1]*10+DisplayData_temp[2];
 		if(Int_temp<temp_stand)
 			TEMP_SWITCH = 1;//打开设备升温
+//		else if((Int_temp>temp_stand)&&TEMP_SWITCH) TEMP_SWITCH = TEMP_SWITCH^1;
 		else TEMP_SWITCH = 0;
 		
 		if(humi>humid_stand)
@@ -412,27 +420,10 @@ void main()
 				}
 			case 'o'://表示风扇open
 			{	
-				FAN = 1;
+				FAN = FAN^1;//按位取反
 				break;
 			}
-			case 'c'://表示风扇close
-			{	
-				FAN = 0;
-				break;
-			}
-			default:
-			{
-				value[index] = ReData;
-				index++;
-				if(index==3) 
-				{
-					index=0;
-					if(value[2]=='t')
-						temp_stand = str2int(value);//设置温度
-					else 
-						humid_stand = str2int(value);//设置湿度
-				}
-			}
+
 			
            }    
 		   //----------------------
