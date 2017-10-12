@@ -12,11 +12,8 @@ sbit FAN = P2^1;
 sbit TEMP_SWITCH=P2^7;
 sbit HUMID_SWITCH=P2^6;
 
-u8 HUMI_FLAG;
-u8 TEMP_FLAG;
-u8 recv_state;
-
 int temp;//是一个四位整数，两位表示温度的整数，两位表示温度的小数
+u8 recv_state;//表征接收数据类型
 u8 Int_temp;
 u8 humi;
 u8 temp_stand;//设置湿度的阙值
@@ -170,7 +167,7 @@ void  Ds18b20ChangTemp()
 * 输    出         : 无
 *******************************************************************************/
 
-void  Ds18b20ReadTempCom()
+void Ds18b20ReadTempCom()
 {	
 
 	Ds18b20Init();
@@ -386,11 +383,10 @@ void main()
 		Int_temp = DisplayData_temp[1]*10+DisplayData_temp[2];
 		if(Int_temp<temp_stand)
 			TEMP_SWITCH = 1;//打开设备升温
-//		else if((Int_temp>temp_stand)&&TEMP_SWITCH) TEMP_SWITCH = TEMP_SWITCH^1;
 		else TEMP_SWITCH = 0;
 		
 		if(humi>humid_stand)
-			HUMID_SWITCH = 1;
+			HUMID_SWITCH = 1;//打开风扇
 		else HUMID_SWITCH = 0;
 
 		if(Flag==1){  
@@ -403,9 +399,7 @@ void main()
 				datapros();
 				//前段发送湿度数据
                 send_data(DisplayData[0]+'0');
-//				delay_ms(100);
 				send_data(DisplayData[1]+'0');
-//				delay_ms(100);
 				send_data(DisplayData[2]+'0');
 				break;
 				}
@@ -418,13 +412,11 @@ void main()
 				send_data(DisplayData_temp[4]+'0');
 				break;
 				}
-			case 'o'://表示风扇open
+			case 'o'://表示风扇open或者close
 			{	
 				FAN = FAN^1;//按位取反
 				break;
 			}
-
-			
            }    
 		   //----------------------
             Flag=0;                 //数据处理完毕后将标志位置0，表示没有新数据要处理
