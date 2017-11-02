@@ -4,13 +4,14 @@
 typedef unsigned char u8;
 typedef unsigned int u16;
 
-sbit DHT11_DQ_OUT=P3^6;
+//--定义湿度使用的IO口--//
+sbit DHT11_DQ_OUT=P2^6;
 //--定义温度使用的IO口--//
-sbit DSPORT=P3^7;
+sbit DSPORT=P2^5;
 
-sbit FAN = P2^1;
-sbit TEMP_SWITCH=P2^7;
-sbit HUMID_SWITCH=P2^6;
+sbit FAN = P2^7;
+sbit TEMP_SWITCH=P2^1;
+sbit HUMID_SWITCH=P3^6;
 
 int temp;//是一个四位整数，两位表示温度的整数，两位表示温度的小数
 u8 recv_state;//表征接收数据类型
@@ -333,8 +334,7 @@ void usart_init()
     ES   = 1;                     //开串口中断                  
     EA   = 1;                     //开总中断          
     TR1  = 1;                     //启动定时器
-	TEMP_FLAG = 0;
-	HUMI_FLAG = 0;
+
 	recv_state = 0;
 	temp_stand = 31;
 	humid_stand = 60;
@@ -382,8 +382,8 @@ void main()
 		datapros_temp(temp);
 		Int_temp = DisplayData_temp[1]*10+DisplayData_temp[2];
 		if(Int_temp<temp_stand)
-			TEMP_SWITCH = 1;//打开设备升温
-		else TEMP_SWITCH = 0;
+			FAN = 1;//打开设备升温
+		else FAN = 0;
 		
 		if(humi>humid_stand)
 			HUMID_SWITCH = 1;//打开风扇
